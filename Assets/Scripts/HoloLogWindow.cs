@@ -21,6 +21,14 @@ public class HoloLogWindow : MonoBehaviour {
 
     private void Application_logMessageReceived(string condition, string stackTrace, LogType type)
     {
+        if (condition.Contains("RenderTexture.GenerateMips failed"))
+        {
+            // Bug in Unity 2017.1 where this error message continually appears. Solution is to wait for a stable release of 2017.2 and migrate.
+            // https://forums.hololens.com/discussion/8355/rendertexture-generatemips-failed
+            return;
+        }
+
+
         Messages.Add(condition);
         if (Messages.Count > MaxNumMessages)
         {

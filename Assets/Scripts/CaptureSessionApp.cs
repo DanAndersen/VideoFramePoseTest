@@ -111,7 +111,7 @@ public class CaptureSessionApp : MonoBehaviour {
     {
         if (_videoCapture != null)
         {
-            _videoCapture.FrameSampleAcquired -= OnFrameSampleAcquired;
+            //_videoCapture.FrameSampleAcquired -= OnFrameSampleAcquired;
             _videoCapture.Dispose();
         }
     }
@@ -131,7 +131,7 @@ public class CaptureSessionApp : MonoBehaviour {
 
         _resolution = CameraStreamHelper.Instance.GetLowestResolution();
         float frameRate = CameraStreamHelper.Instance.GetHighestFrameRate(_resolution);
-        videoCapture.FrameSampleAcquired += OnFrameSampleAcquired;
+        //videoCapture.FrameSampleAcquired += OnFrameSampleAcquired;
 
         //You don't need to set all of these params.
         //I'm just adding them to show you that they exist.
@@ -165,6 +165,11 @@ public class CaptureSessionApp : MonoBehaviour {
         Debug.Log(string.Format("Started video recording for session {0}", m_CurrentRecordingLabel));
 
         Debug.Log("Video capture started.");
+
+        if (m_CurrentRecordingState == RecordingState.Recording)
+        {
+            this._videoCapture.RequestNextFrameSample(OnFrameSampleAcquired);
+        }
     }
 
     void OnFrameSampleAcquired(VideoCaptureSample sample)
@@ -240,8 +245,8 @@ public class CaptureSessionApp : MonoBehaviour {
             Vector3 mdPoint = LocatableCameraUtils.PixelCoordToWorldCoord(cameraToWorldMatrix, projectionMatrix, _resolution, targetPoint, surfacePlane);
             */
 
-            string infoText = String.Format("Position: {0}\t{1}\t{2}\nRotation: {3}\t{4}\t{5}", position.x, position.y, position.z, eulerAngles.x, eulerAngles.y, eulerAngles.z);
-            Debug.Log(infoText);
+            //string infoText = String.Format("Position: {0}\t{1}\t{2}\nRotation: {3}\t{4}\t{5}", position.x, position.y, position.z, eulerAngles.x, eulerAngles.y, eulerAngles.z);
+            //Debug.Log(infoText);
 
 
             float timestamp = Time.time - m_RecordingStartTime;
@@ -255,10 +260,10 @@ public class CaptureSessionApp : MonoBehaviour {
             
             SaveFrame(jpgBytes, numFrames);
 
-            //_targetIndicator.SetPosition(mdPoint);
-            //_targetIndicator.SetText("P");
-
-            //_videoPanelUI.gameObject.SetActive(false);
+            if (m_CurrentRecordingState == RecordingState.Recording)
+            {
+                this._videoCapture.RequestNextFrameSample(OnFrameSampleAcquired);
+            }
         }, false);
     }
 
@@ -393,7 +398,7 @@ public class CaptureSessionApp : MonoBehaviour {
         m_CurrentRecordingState = RecordingState.NotRecording;
         UpdateRecordingUI();
 
-        string outputMessage = string.Format("Recording finished.\nRoom mesh: {1}\nPoses: {2}", m_CurrentMeshFilepath, m_CurrentPoseFilepath);
+        string outputMessage = string.Format("Recording finished.\nRoom mesh: {0}\nPoses: {1}", m_CurrentMeshFilepath, m_CurrentPoseFilepath);
         Debug.Log(outputMessage);
     }
 
