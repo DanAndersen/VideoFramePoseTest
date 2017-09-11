@@ -7,6 +7,12 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.VR.WSA;
+using Unity.IO.Compression;
+
+using System.Collections;
+#if !UNITY_EDITOR && UNITY_METRO
+using System.IO.Compression;    // for ZipFile
+#endif
 
 public class CaptureSessionApp : MonoBehaviour {
 
@@ -27,8 +33,7 @@ public class CaptureSessionApp : MonoBehaviour {
 
     // Injected objects
     VideoPanel _videoPanelUI;
-
-
+    
     float m_RecordingStartTime;
 
 
@@ -140,7 +145,7 @@ public class CaptureSessionApp : MonoBehaviour {
         _cameraParams.cameraResolutionWidth = _resolution.width;
         _cameraParams.frameRate = Mathf.RoundToInt(frameRate);
         _cameraParams.pixelFormat = CapturePixelFormat.BGRA32;
-        //_cameraParams.rotateImage180Degrees = false; //If your image is upside down, remove this line.
+        _cameraParams.rotateImage180Degrees = true; //If your image is upside down, remove this line.
         _cameraParams.enableHolograms = false;
 
         UnityEngine.WSA.Application.InvokeOnAppThread(() => { _videoPanelUI.SetResolution(_resolution.width, _resolution.height); }, false);
@@ -382,8 +387,23 @@ public class CaptureSessionApp : MonoBehaviour {
             Debug.Log("Stopped recording video.");
 
             SaveMesh();
-
+            
             SavePoses();
+            
+            Debug.Log("Compressing frames...");
+
+            string sInDir = m_CurrentOutputFramesDirectory;
+            string sOutFile = Path.Combine(OutputDirectoryBasePath, string.Format("{0}_frames.zip", m_CurrentRecordingLabel));
+
+#if !UNITY_EDITOR && UNITY_METRO
+            Debug.Log("Zipping frames...");
+            ZipFile.CreateFromDirectory(sInDir, sOutFile);
+            Debug.Log(string.Format("Frames compressed to {0}", sOutFile));
+#else
+            Debug.LogError("NOTE: Not zipping up any frames in editor mode because ZipFile is only in .NET code");
+#endif
+            
+            
 
             OnRecordingFinalized();
         }
@@ -392,7 +412,7 @@ public class CaptureSessionApp : MonoBehaviour {
             Debug.LogError("Failed to stop recording video");
         }
     }
-
+    
     void OnRecordingFinalized()
     {
         m_CurrentRecordingState = RecordingState.NotRecording;
