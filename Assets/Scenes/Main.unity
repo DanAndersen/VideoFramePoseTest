@@ -148,6 +148,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a7e5a75c0a5c9e4bbff39f53104e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PlacingAxisMarkers: 1
+  AxisPrefab: {fileID: 1432443836036686, guid: bd33e0a667ced9145bd2bd7ba6668520, type: 2}
   ToggleRecordingButton: {fileID: 451995745}
 --- !u!1 &75660051
 GameObject:

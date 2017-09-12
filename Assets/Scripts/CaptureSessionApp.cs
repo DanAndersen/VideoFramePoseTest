@@ -16,6 +16,9 @@ using System.IO.Compression;    // for ZipFile
 
 public class CaptureSessionApp : MonoBehaviour {
 
+    public bool PlacingAxisMarkers = true;
+    public GameObject AxisPrefab;
+
     enum RecordingState { NotRecording, Initializing, Recording, Finalizing };
 
     struct PoseData
@@ -206,27 +209,7 @@ public class CaptureSessionApp : MonoBehaviour {
         // Right now we pass things across the pipe as a float array then convert them back into UnityEngine.Matrix using a utility method
         Matrix4x4 cameraToWorldMatrix = LocatableCameraUtils.ConvertFloatArrayToMatrix4x4(cameraToWorldMatrixAsFloat);
         Matrix4x4 projectionMatrix = LocatableCameraUtils.ConvertFloatArrayToMatrix4x4(projectionMatrixAsFloat);
-
-        Matrix4x4 m = cameraToWorldMatrix;
-
-        // Extract new local position
-        Vector3 position = m.GetColumn(3);
-
-        // Extract new local rotation
-        Quaternion rotation = Quaternion.LookRotation(
-            m.GetColumn(2),
-            m.GetColumn(1)
-        );
-
-        Vector3 eulerAngles = rotation.eulerAngles;
-
-        // Extract new local scale
-        Vector3 scale = new Vector3(
-            m.GetColumn(0).magnitude,
-            m.GetColumn(1).magnitude,
-            m.GetColumn(2).magnitude
-        );
-
+        
         //This is where we actually use the image data
         UnityEngine.WSA.Application.InvokeOnAppThread(() =>
         {
@@ -258,8 +241,16 @@ public class CaptureSessionApp : MonoBehaviour {
 
             PoseData pose = new PoseData();
             pose.timestamp = timestamp;
-            pose.position = position;
-            pose.eulerAngles = eulerAngles;
+            pose.position = cameraToWorldMatrix.MultiplyPoint(Vector3.zero);
+
+            Quaternion rotation = Quaternion.LookRotation(-cameraToWorldMatrix.GetColumn(2), cameraToWorldMatrix.GetColumn(1));
+            pose.eulerAngles = rotation.eulerAngles;
+
+            if (PlacingAxisMarkers && AxisPrefab != null)
+            {
+                Instantiate(AxisPrefab, pose.position, rotation);
+            }
+
 
             m_CurrentPoses.Add(pose);
             
@@ -359,7 +350,7 @@ public class CaptureSessionApp : MonoBehaviour {
         foreach (PoseData pose in m_CurrentPoses)
         {
             string timestamp = ((double)pose.timestamp).ToString();
-
+            
             string pos_x = ((double)pose.position.x).ToString();
             string pos_y = ((double)pose.position.y).ToString();
             string pos_z = ((double)pose.position.z).ToString();
