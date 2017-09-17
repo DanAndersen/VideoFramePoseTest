@@ -150,6 +150,8 @@ public class CaptureSessionApp : MonoBehaviour {
         _cameraParams.pixelFormat = CapturePixelFormat.BGRA32;
         _cameraParams.rotateImage180Degrees = true; //If your image is upside down, remove this line.
         _cameraParams.enableHolograms = false;
+        _cameraParams.AutoExposureEnabled = false;
+        _cameraParams.ManualExposureAmount = 0.1f;
 
         UnityEngine.WSA.Application.InvokeOnAppThread(() => { _videoPanelUI.SetResolution(_resolution.width, _resolution.height); }, false);
 
